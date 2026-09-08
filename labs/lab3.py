@@ -52,10 +52,10 @@ if prompt := st.chat_input("What is up?"):
     system_message = st.session_state.messages[0]
 
     # Keep the last two user messages and the responses to them
-    if len(user_messages) >= 2:
+    if len(user_messages) >= 3:
         buffer_messages = [
             system_message
-        ] + st.session_state.messages[user_messages[-2]:]
+        ] + st.session_state.messages[user_messages[-3]:]
     else:
         buffer_messages = [
             system_message
