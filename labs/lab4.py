@@ -139,3 +139,89 @@ st.title('Lab 4: Chatbot using RAG')
 #
 #else:
 #    st.info('Enter a topic in the sidebar to search the collection')
+
+#### PART B - COURSE INFORMATION CHATBOT ####
+
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state["messages"] = [
+        {
+            "role": "assistant",
+            "content": "What can I help you with?"
+        }
+    ]
+
+
+# Display chat messages from history on app rerun
+for msg in st.session_state.messages:
+    chat_msg = st.chat_message(msg["role"])
+    chat_msg.write(msg["content"])
+
+
+# React to user input
+if prompt := st.chat_input("What is up?"):
+
+    st.session_state.messages.append(
+        {"role": "user", "content": prompt}
+    )
+
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+
+    #### GET RELEVANT INFORMATION FROM VECTOR DATABASE ####
+
+    client = st.session_state.openai_client
+
+    response = client.embeddings.create(
+        input=prompt,
+        model="text-embedding-3-small"
+    )
+
+    # Get the embedding
+    query_embedding = response.data[0].embedding
+
+    # Get the text related to this question
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=3
+    )
+
+    # Combine the returned documents
+    extra_info = ""
+
+    for doc in results["documents"][0]:
+        extra_info += doc + "\n"
+
+
+    #### ADD RAG INFORMATION TO THE PROMPT ####
+
+    system_message = {
+        "role": "system",
+        "content":
+            "You are a helpful AI assistant. "
+            "Use the following context to answer the question. "
+            "If you use information from the context, clearly say that "
+            "the information came from the course documents using RAG.\n\n"
+            + extra_info
+    }
+
+    messages_for_llm = [
+        system_message
+    ] + st.session_state.messages
+
+
+    #### CALL THE LLM ####
+
+    stream = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages_for_llm,
+        stream=True
+    )
+
+    with st.chat_message("assistant"):
+        response = st.write_stream(stream)
+
+    st.session_state.messages.append(
+        {"role": "assistant", "content": response}
+    )
