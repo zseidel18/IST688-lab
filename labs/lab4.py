@@ -1,33 +1,15 @@
 import streamlit as st
 from openai import OpenAI
 import sys
+from pathlib import Path
+from PyPDF2 import PdfReader
+
 
 # A fix for working with ChromaDB on Streamlit Community Cloud
 __import__('pysqlite3')
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 import chromadb
-from pathlib import Path
-from PyPDF2 import PdfReader
-
-#### CREATE CHROMADB ####
-
-if 'Lab4_VectorDB' not in st.session_state:
-
-    # Create ChromaDB client
-    chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_Lab')
-    collection = chroma_client.get_or_create_collection('Lab4Collection')
-
-    # Check if collection is empty and load PDFs
-    if collection.count() == 0:
-        loaded = load_pdfs_to_collection('./Lab-04-Data/', collection)
-
-    # Store vector database collection in session state
-    st.session_state.Lab4_VectorDB = collection
-
-else:
-    collection = st.session_state.Lab4_VectorDB
-
 
 
 #### USING CHROMA DB WITH OPENAI EMBEDDINGS ####
@@ -98,31 +80,44 @@ def load_pdfs_to_collection(folder_path, collection):
     return loaded
 
 
-# Check if collection is empty and load PDFs
-if collection.count() == 0:
-    loaded = load_pdfs_to_collection('./Lab-04-Data/', collection)
+#### CREATE CHROMADB ####
 
-
-# Store vector database collection in session state
+# Only create ChromaDB once
 if 'Lab4_VectorDB' not in st.session_state:
+
+    # Create ChromaDB client
+    chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_Lab')
+    collection = chroma_client.get_or_create_collection('Lab4Collection')
+
+    # Check if collection is empty and load PDFs
+    if collection.count() == 0:
+        loaded = load_pdfs_to_collection('./Lab-04-Data/', collection)
+
+    # Store collection in session state
     st.session_state.Lab4_VectorDB = collection
 
-collection = st.session_state.Lab4_VectorDB
+else:
+    collection = st.session_state.Lab4_VectorDB
 
 
 #### MAIN APP ####
+
 st.title('Lab 4: Chatbot using RAG')
 
 
 #### QUERYING A COLLECTION -- ONLY USED FOR TESTING ####
 
-topic = st.sidebar.text_input('Topic', placeholder='Type your topic (e.g., GenAI)...')
+topic = st.sidebar.text_input(
+    'Topic',
+    placeholder='Type your topic (e.g., GenAI)...'
+)
 
 if topic:
     client = st.session_state.openai_client
     response = client.embeddings.create(
         input=topic,
-        model='text-embedding-3-small')
+        model='text-embedding-3-small'
+    )
 
     # Get the embedding
     query_embedding = response.data[0].embedding
