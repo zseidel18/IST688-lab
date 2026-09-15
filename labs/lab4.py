@@ -10,10 +10,25 @@ import chromadb
 from pathlib import Path
 from PyPDF2 import PdfReader
 
+#### CREATE CHROMADB ####
 
-# Create ChromaDB client
-chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_Lab')
-collection = chroma_client.get_or_create_collection('Lab4Collection')
+if 'Lab4_VectorDB' not in st.session_state:
+
+    # Create ChromaDB client
+    chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_Lab')
+    collection = chroma_client.get_or_create_collection('Lab4Collection')
+
+    # Check if collection is empty and load PDFs
+    if collection.count() == 0:
+        loaded = load_pdfs_to_collection('./Lab-04-Data/', collection)
+
+    # Store vector database collection in session state
+    st.session_state.Lab4_VectorDB = collection
+
+else:
+    collection = st.session_state.Lab4_VectorDB
+
+
 
 #### USING CHROMA DB WITH OPENAI EMBEDDINGS ####
 
