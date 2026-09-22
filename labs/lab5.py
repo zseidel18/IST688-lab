@@ -315,11 +315,6 @@ if st.button("Get recommendations", type="primary"):
                     f"{current['description']}"
                 )
 
-                with st.expander(
-                    "View weather data used by the bot"
-                ):
-                    st.json(weather)
-
         except Exception as error:
             st.error(
                 f"Unable to create recommendations: {error}"
