@@ -8,10 +8,7 @@ from openai import OpenAI
 # Create the OpenAI client using the API key stored in Streamlit secrets.
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# You can place OPENAI_MODEL in your Streamlit secrets.
-# If it is not there, the app will use gpt-5-mini.
 MODEL = st.secrets.get("OPENAI_MODEL", "gpt-5-mini")
-
 
 # location can be a city, a zip code, an airport code ('SYR'),
 # or a landmark ('Eiffel+Tower')
@@ -37,8 +34,6 @@ def get_current_weather(location):
         #   nearest_area      -- the location wttr.in actually matched
         current = data['current_condition'][0]
 
-        # Everything above this point mirrors the starter code from
-        # the lab PDF. The values below extend it for Part B.
         today = data["weather"][0]
         nearest = data["nearest_area"][0]
 
@@ -71,7 +66,6 @@ def get_current_weather(location):
                 }
             )
 
-        # The first three values come directly from the lab example.
         # The remaining values were added for the clothing and
         # outdoor-activity recommendations.
         return {
@@ -121,8 +115,6 @@ def get_current_weather(location):
 
 
 # Define the tool that OpenAI is allowed to request.
-# This follows the structure shown in the Functions slides:
-# type -> function -> name, description, parameters, required.
 tools = [
     {
         "type": "function",
@@ -192,7 +184,6 @@ def create_weather_advice(location):
 
     # First OpenAI call:
     # The model receives the available tool and decides whether
-    # the tool should be used.
     first_response = client.chat.completions.create(
         model=MODEL,
         messages=messages,
