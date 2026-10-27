@@ -9,9 +9,77 @@ def get_weather_data(location: str = "Syracuse, NY") -> dict:
     Accepts city names, ZIP codes, airport codes, and landmarks.
     Defaults to Syracuse, NY when no argument is provided.
     """
-    url = f'https://wttr.in/{location}?format=j1'
+    url = f"https://wttr.in/{location}?format=j1"
     response = requests.get(url, timeout=10)
 
+    if response.status_code != 200:
+        raise Exception(f"wttr.in error: status {response.status_code}")
+
+    try:
+        data = response.json()
+    except ValueError:
+        raise Exception(f"Could not find a location named {location}")
+
+    try:
+        current = data["current_condition"][0]
+        today = data["weather"][0]
+        nearest = data["nearest_area"][0]
+
+        matched_city = nearest["areaName"][0]["value"]
+        matched_region = nearest["region"][0]["value"]
+        matched_country = nearest["country"][0]["value"]
+
+        hourly_forecast = []
+
+        for hour in today["hourly"]:
+            raw_time = int(hour["time"])
+            hour_24 = raw_time // 100
+            time_label = f"{hour_24:02d}:00"
+
+            hourly_forecast.append(
+                {
+                    "time": time_label,
+                    "temperature_F": float(hour["tempF"]),
+                    "feels_like_F": float(hour["FeelsLikeF"]),
+                    "description": hour["weatherDesc"][0]["value"],
+                    "chance_of_rain_percent": int(hour["chanceofrain"]),
+                    "chance_of_snow_percent": int(hour["chanceofsnow"]),
+                    "wind_mph": float(hour["windspeedMiles"]),
+                }
+            )
+
+        return {
+            "location": location,
+            "temperature": float(current["temp_F"]),
+            "description": current["weatherDesc"][0]["value"],
+            "matched_location": (
+                f"{matched_city}, {matched_region}, {matched_country}"
+            ),
+            "current": {
+                "temperature_F": float(current["temp_F"]),
+                "feels_like_F": float(current["FeelsLikeF"]),
+                "description": current["weatherDesc"][0]["value"],
+                "humidity_percent": int(current["humidity"]),
+                "wind_mph": float(current["windspeedMiles"]),
+                "wind_direction": current["winddir16Point"],
+                "precipitation_inches": float(current["precipInches"]),
+                "visibility_miles": float(current["visibilityMiles"]),
+                "uv_index": int(current["uvIndex"]),
+            },
+            "today": {
+                "minimum_temperature_F": float(today["mintempF"]),
+                "maximum_temperature_F": float(today["maxtempF"]),
+                "sunrise": today["astronomy"][0]["sunrise"],
+                "sunset": today["astronomy"][0]["sunset"],
+                "hourly_forecast": hourly_forecast,
+            },
+        }
+
+    except (KeyError, IndexError, TypeError, ValueError) as error:
+        raise Exception(
+            "wttr.in returned weather data in an unexpected format."
+        ) from error
+    
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 agent = create_agent(
