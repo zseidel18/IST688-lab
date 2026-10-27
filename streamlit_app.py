@@ -5,9 +5,9 @@ lab2_page = st.Page('labs/lab2.py', title = 'lab 2')
 lab3_page = st.Page('labs/lab3.py', title = 'lab 3')
 lab4_page = st.Page('labs/lab4.py', title = 'lab 4')
 lab5_page = st.Page('labs/lab5.py', title = 'lab 5', default=True)
+lab6_page = st.Page('labs/labLangChain.py', title = 'lab 6')
 
 
-
-pg = st.navigation([lab1_page, lab2_page, lab3_page, lab4_page, lab5_page])
+pg = st.navigation([lab1_page, lab2_page, lab3_page, lab4_page, lab5_page, lab6_page])
 st.set_page_config(page_title= 'lab manager')
 pg.run()
