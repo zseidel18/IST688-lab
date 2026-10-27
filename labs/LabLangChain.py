@@ -3,6 +3,7 @@ import requests
 import streamlit as st
 from langchain.agents import create_agent
 
+
 def get_weather_data(location: str = "Syracuse, NY") -> dict:
     """Return current weather and today's forecast for one location,
     including temperatures in Fahrenheit, wind, and rain or snow chances.
@@ -79,7 +80,8 @@ def get_weather_data(location: str = "Syracuse, NY") -> dict:
         raise Exception(
             "wttr.in returned weather data in an unexpected format."
         ) from error
-    
+
+
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 agent = create_agent(
@@ -122,3 +124,11 @@ if st.button("Get advice"):
 
     with st.chat_message("assistant"):
         st.write(result["messages"][-1].content)
+
+    with st.expander("Behind the scenes"):
+        for message in result["messages"]:
+            st.write(f"**{message.type}**")
+            st.write(message.content)
+
+            if message.type == "ai" and message.tool_calls:
+                st.write(message.tool_calls)
