@@ -132,3 +132,24 @@ if st.button("Get advice"):
 
             if message.type == "ai" and message.tool_calls:
                 st.write(message.tool_calls)
+
+
+# 12a. There are five messages:
+# 1. human: My question about Syracuse and the Eiffel Tower.
+# 2. ai: The model requests weather for both locations.
+# 3. tool: The weather results for Syracuse.
+# 4. tool: The weather results for the Eiffel Tower.
+# 5. ai: The final clothing and activity recommendations.
+
+# 12b. Its message.content is empty because the model is requesting tools
+# instead of writing an answer.
+# The requests are in message.tool_calls: one for Syracuse
+# and one for the Eiffel Tower.
+
+# 12c. In Lab 5:
+# The initial messages list created the user message.
+# The first API call created the AI tool requests, which were
+# added using messages.append(assistant_message).
+# The for tool_call loop ran the weather function for each location.
+# messages.append with role="tool" added each weather result.
+# The second API call created the final AI answer.
