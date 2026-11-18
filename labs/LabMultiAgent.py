@@ -199,6 +199,29 @@ manager_agent = Agent(
 )
 
 
+# Single agent
+single_agent = Agent(
+    name="Single agent",
+    instructions=(
+        "You are a practical weather assistant. First call get_weather "
+        "for the user's location. If no location is provided, use "
+        "Syracuse, NY. Check that the matched location corresponds to "
+        "the requested location. If the location is invalid, the match "
+        "is clearly wrong, or weather information is unavailable, explain "
+        "the problem and ask for a valid location. Do not continue with "
+        "recommendations in that case. Otherwise, use the returned weather "
+        "to give one clear, concise answer with a weather summary, "
+        "clothing, useful items, outdoor activities, and any weather "
+        "warnings. Consider temperature, feels-like temperature, wind, "
+        "precipitation, and changes throughout the day. Suggest suitable "
+        "times for outdoor activities and indoor alternatives if needed. "
+        "Include the matched location. Do not invent weather data."
+    ),
+    tools=[get_weather],
+    model=MODEL,
+)
+
+
 # Run helper
 @st.cache_resource
 def get_event_loop():
@@ -220,6 +243,11 @@ st.write(
     "blank, the app will use Syracuse, NY."
 )
 
+mode = st.radio(
+    "Choose a version",
+    ["Team", "Single agent"],
+)
+
 location = st.text_input(
     "City, state, or country",
     placeholder="Example: Syracuse, NY",
@@ -227,11 +255,12 @@ location = st.text_input(
 
 if st.button("Get advice"):
     location = location.strip() or "Syracuse, NY"
+    selected_agent = manager_agent if mode == "Team" else single_agent
 
     with st.spinner("Checking the weather and preparing advice..."):
         try:
             result, seconds = run(
-                manager_agent,
+                selected_agent,
                 f"What should I wear and do today in {location}?",
             )
 
