@@ -111,6 +111,7 @@ def get_current_weather(location):
         ) from error
 
 
+# Weather tool
 @function_tool
 def get_weather(location: str = "Syracuse, NY") -> dict:
     """Return current weather and today's hourly forecast in Fahrenheit.
@@ -119,6 +120,7 @@ def get_weather(location: str = "Syracuse, NY") -> dict:
     return get_current_weather(location)
 
 
+# Specialist agents
 weather_agent = Agent(
     name="Weather agent",
     instructions=(
@@ -155,6 +157,8 @@ activity_agent = Agent(
     model=MODEL,
 )
 
+
+# Manager agent
 manager_agent = Agent(
     name="Manager",
     instructions=(
@@ -195,6 +199,7 @@ manager_agent = Agent(
 )
 
 
+# Run helper
 @st.cache_resource
 def get_event_loop():
     return asyncio.new_event_loop()
@@ -206,6 +211,7 @@ def run(agent, prompt):
     return result, time.perf_counter() - start
 
 
+# Streamlit interface
 st.title("What to Wear Crew")
 
 st.write(
@@ -231,6 +237,29 @@ if st.button("Get advice"):
 
             with st.chat_message("assistant"):
                 st.write(result.final_output)
+
+            usage = result.context_wrapper.usage
+            with st.expander("Behind the scenes"):
+                st.write(
+                    f"Model requests: {usage.requests} · "
+                    f"Tokens: {usage.total_tokens:,} · "
+                    f"Time: {seconds:.1f}s · "
+                    f"Answered by: {result.last_agent.name}"
+                )
+
+                for item in result.new_items:
+                    if item.type == "tool_call_item":
+                        st.write(
+                            f"{item.agent.name} called {item.raw_item.name}: "
+                            f"{item.raw_item.arguments}"
+                        )
+                    elif item.type == "tool_call_output_item":
+                        st.write(f"result: {str(item.output)[:300]}")
+                    elif item.type == "handoff_output_item":
+                        st.write(
+                            f"handoff: {item.source_agent.name} -> "
+                            f"{item.target_agent.name}"
+                        )
 
         except Exception as error:
             st.error(f"Unable to create recommendations: {error}")
